@@ -1,0 +1,1280 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Drehscheibe mit Reibung</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Interaktive Drehscheibe mit Haft- und Gleitreibung: Bewegung, Kräfte und Scheinkräfte im Inertialsystem und im rotierenden Bezugssystem.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap">
+<script async src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<style>
+/* Layout: lab bench. The turntable stage (frame switch, view, controls) sits left or on top; the instrument panel (explanation, toggles, sliders, readouts) beside or below it. */
+:root {
+  --bg: #F6F5F9;
+  --surface: #FFFFFF;
+  --ink: #1C1928;
+  --muted: #5F5A70;
+  --line: #DFDBE8;
+  --accent: #5A3DC8;        /* purple of the mother and child figures on the slides */
+  --accent-ink: #FFFFFF;
+  --accent-soft: #EEE9FC;
+  --focus: #5A3DC8;
+  --scrim: rgba(246, 245, 249, 0.86);
+  --qr-bg: #FFFFFF;
+  --qr-ink: #000000;
+
+  /* canvas */
+  --floor: #EFEDF3;
+  --grid: #DDD9E5;
+  --disc: #E9CDB5;
+  --discline: #CFAE93;
+  --figure: #6748D3;
+  --ring: #BCAAEC;
+  --karton: #E4E4E6;
+  --kartonedge: #A3A2AA;
+  --trace: #8F8A9E;
+  --halo: rgba(255, 255, 255, 0.9);
+  --shadow: rgba(70, 45, 30, 0.28);
+  --mark: #3A3550;
+
+  /* vector colours, as on the slides */
+  --v: #E06A00;
+  --zp: #E0102A;
+  --zf: #D916BE;
+  --cor: #2335E6;
+  --sum: #2B2640;
+
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-math: "STIX Two Text", "Cambria Math", "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121019; --surface: #1C1926; --ink: #EDEAF5; --muted: #A39DB5; --line: #2E2A3B;
+    --accent: #A08BFF; --accent-ink: #120F1C; --accent-soft: #241E3A; --focus: #A08BFF;
+    --scrim: rgba(18, 16, 25, 0.86);
+    --floor: #17141F; --grid: #26222F; --disc: #6A5141; --discline: #846552; --figure: #A890FF;
+    --ring: #54459A; --karton: #D9D9DE; --kartonedge: #8E8D97; --trace: #9993AC;
+    --halo: rgba(18, 16, 25, 0.85); --shadow: rgba(0, 0, 0, 0.55); --mark: #D6D1E6;
+    --v: #FF9A3D; --zp: #FF5468; --zf: #FF62E8; --cor: #8592FF; --sum: #EDEAF5;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121019; --surface: #1C1926; --ink: #EDEAF5; --muted: #A39DB5; --line: #2E2A3B;
+  --accent: #A08BFF; --accent-ink: #120F1C; --accent-soft: #241E3A; --focus: #A08BFF;
+  --scrim: rgba(18, 16, 25, 0.86);
+  --floor: #17141F; --grid: #26222F; --disc: #6A5141; --discline: #846552; --figure: #A890FF;
+  --ring: #54459A; --karton: #D9D9DE; --kartonedge: #8E8D97; --trace: #9993AC;
+  --halo: rgba(18, 16, 25, 0.85); --shadow: rgba(0, 0, 0, 0.55); --mark: #D6D1E6;
+  --v: #FF9A3D; --zp: #FF5468; --zf: #FF62E8; --cor: #8592FF; --sum: #EDEAF5;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+:root {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px 40px;
+  -webkit-text-size-adjust: 100%;
+}
+
+.app { max-width: 1240px; margin: 0 auto; display: grid; gap: 18px; }
+.app > *, .layout > * { min-width: 0; }
+
+/* header */
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.titles { min-width: 0; display: grid; gap: 4px; }
+.eyebrow {
+  margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--muted);
+}
+h1 {
+  margin: 0; font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(28px, 5.2vw, 44px); line-height: 1.02; letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.lead { margin: 4px 0 0; color: var(--muted); max-width: 60ch; }
+
+/* main grid */
+.layout { display: grid; gap: 22px; }
+@media (min-width: 960px) {
+  .layout { grid-template-columns: minmax(0, 1.4fr) minmax(330px, 1fr); align-items: start; }
+  .stage { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+}
+.stage { min-width: 0; display: grid; gap: 12px; }
+
+/* frame switch */
+.frames {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+}
+.frames button {
+  appearance: none; border: 0; background: transparent; color: var(--ink);
+  border-radius: 10px; padding: 7px 4px; font: inherit; cursor: pointer;
+  display: grid; align-content: center; text-align: center; min-height: 54px;
+}
+.frames .k { font-family: var(--font-display); font-weight: 700; font-size: 17px; line-height: 1.15; }
+.frames .s { font-size: 12px; color: var(--muted); line-height: 1.25; }
+.frames button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.frames button[aria-selected="true"] .s { color: inherit; opacity: 0.85; }
+.frames button:not([aria-selected="true"]):hover { background: var(--accent-soft); }
+
+/* views */
+.views { display: grid; gap: 10px; }
+.views[data-mode="both"] { grid-template-columns: 1fr 1fr; }
+.views[data-mode="in"] #view-rot, .views[data-mode="rot"] #view-in { display: none; }
+.view { margin: 0; min-width: 0; display: grid; gap: 6px; }
+.views:not([data-mode="both"]) .view {
+  width: 100%; max-width: min(100%, max(300px, calc(100vh - 260px))); justify-self: center;
+}
+.view figcaption {
+  display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted);
+  min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.view figcaption b { color: var(--ink); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--figure); flex: none; }
+.view canvas {
+  display: block; width: 100%; height: auto; aspect-ratio: 1 / 1;
+  border-radius: 16px; background: var(--floor); touch-action: manipulation;
+}
+
+/* buttons */
+.actions { display: flex; gap: 8px; }
+.btn {
+  appearance: none; font: inherit; font-weight: 700; font-size: 15px;
+  border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  padding: 0 16px; min-height: 50px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap;
+}
+.btn svg { width: 18px; height: 18px; flex: none; }
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; flex: 1; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn.small { min-height: 40px; font-size: 14px; padding: 0 12px; }
+#play { width: 50px; padding: 0; }
+.btn:focus-visible, .frames button:focus-visible, .seg label:has(input:focus-visible),
+.chip:has(input:focus-visible), summary:focus-visible, input[type="range"]:focus-visible, input[type="url"]:focus-visible {
+  outline: 3px solid var(--focus); outline-offset: 2px;
+}
+
+/* panel */
+.panel { min-width: 0; display: grid; gap: 20px; }
+.explain { background: var(--accent-soft); border-radius: 16px; padding: 16px 18px 18px; display: grid; gap: 6px; }
+.pill {
+  justify-self: start; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 999px; background: var(--surface); color: var(--accent);
+}
+.pill[data-phase="free"] { background: var(--accent); color: var(--accent-ink); }
+.pill[data-phase="gone"] { background: var(--ink); color: var(--bg); }
+.explain h2 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 23px; line-height: 1.15; text-wrap: balance; }
+.explain p { margin: 0; line-height: 1.75; }
+
+.group { border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 12px; min-width: 0; }
+.group h3 {
+  margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted);
+}
+.note { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+/* math notation */
+.m { font-family: var(--font-math); font-style: italic; white-space: nowrap; }
+.m sub { font-size: 0.68em; }
+.vec { position: relative; display: inline-block; }
+.vec::after {
+  content: "\2192"; position: absolute; left: 55%; top: -0.62em; transform: translateX(-50%);
+  font-size: 0.72em; font-style: normal; line-height: 1;
+}
+.t-v { color: var(--v); } .t-zp { color: var(--zp); } .t-zf { color: var(--zf); } .t-cor { color: var(--cor); } .t-sum { color: var(--sum); }
+
+/* toggles */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  position: relative; display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 13px 7px 10px; min-height: 42px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); cursor: pointer; user-select: none; font-size: 14px;
+}
+.chip input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.chip .sw { width: 26px; height: 12px; flex: none; }
+.chip .m { font-size: 17px; }
+.chip:has(input:checked) { border-color: currentColor; }
+.chip:has(input:not(:checked)) { opacity: 0.5; }
+.chip:has(input:not(:checked)) .lbl { text-decoration: line-through; }
+
+/* sliders */
+.slider { display: grid; gap: 2px; }
+.slider .row { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; }
+.slider label { font-weight: 700; }
+.slider output { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; }
+input[type="range"] { width: 100%; height: 34px; margin: 0; accent-color: var(--accent); }
+input[type="range"]:disabled { opacity: 0.45; }
+.seg { display: inline-grid; grid-auto-flow: column; gap: 4px; padding: 3px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); justify-self: start; }
+.seg label { position: relative; padding: 6px 12px; border-radius: 9px; cursor: pointer; font-size: 14px; font-variant-numeric: tabular-nums; }
+.seg input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.seg label:has(input:checked) { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+
+/* readouts */
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 6px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: baseline; }
+thead th { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+tbody th { text-align: left; font-weight: 400; }
+tbody th .u { color: var(--muted); font-size: 12px; margin-left: 4px; }
+td { font-family: var(--font-math); font-size: 16px; min-width: 64px; }
+table[data-mode="in"] .c-rot, table[data-mode="rot"] .c-in { color: var(--muted); }
+table[data-mode="in"] thead .c-in, table[data-mode="rot"] thead .c-rot { color: var(--accent); }
+
+/* equation */
+.eq { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 10px; font-family: var(--font-math); font-size: 19px; line-height: 1.9; }
+.term { display: grid; justify-items: center; }
+.term small { font-family: var(--font-body); font-size: 12px; line-height: 1.3; color: var(--muted); text-align: center; }
+.op { padding-top: 0; }
+
+/* questions */
+details { border-bottom: 1px solid var(--line); padding: 4px 0 10px; }
+details:last-child { border-bottom: 0; }
+summary { cursor: pointer; font-weight: 700; padding: 6px 0; line-height: 1.7; }
+details p { margin: 4px 0 0; line-height: 1.75; }
+.foot { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.6; }
+
+/* QR overlay */
+.qr-overlay {
+  position: fixed; inset: 0; z-index: 50; background: var(--scrim);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  display: grid; place-items: center; overflow-y: auto;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px))
+           max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.qr-box {
+  width: min(100%, 520px); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 20px; padding: 20px; display: grid; gap: 12px;
+  box-shadow: 0 20px 60px var(--shadow);
+}
+.qr-box h2 { margin: 0; font-family: var(--font-display); font-size: 26px; }
+.qr-code {
+  background: var(--qr-bg); color: var(--qr-ink); border-radius: 14px; padding: 10px;
+  display: grid; place-items: center; width: min(100%, 64vh); justify-self: center; aspect-ratio: 1 / 1;
+}
+.qr-code canvas { width: 100%; height: auto; image-rendering: pixelated; display: block; }
+.qr-code p { margin: 0; padding: 16px; text-align: center; font-size: 14px; }
+.qr-url { font-family: var(--font-body); font-size: 15px; word-break: break-all; text-align: center; margin: 0; color: var(--muted); }
+.qr-box label { font-weight: 700; font-size: 14px; }
+.qr-box input[type="url"] {
+  width: 100%; font: inherit; font-size: 15px; padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+}
+.qr-row { display: flex; gap: 8px; justify-content: flex-end; }
+
+@media (max-width: 420px) {
+  .frames .k { font-size: 15px; }
+  .frames .s { font-size: 11px; }
+  .btn { padding: 0 12px; }
+  .eq { font-size: 17px; }
+}
+
+/* page switch: page 1 without friction, page 2 with friction */
+.pages { display: flex; flex-wrap: wrap; gap: 6px; }
+.pages a {
+  display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 14px 0 6px;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--surface);
+  color: var(--ink); text-decoration: none; font-size: 14px; font-weight: 700;
+}
+.pages .n {
+  display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent); font-family: var(--font-display); font-size: 14px;
+}
+.pages a[aria-current="page"] { background: var(--accent); border-color: transparent; color: var(--accent-ink); }
+.pages a[aria-current="page"] .n { background: var(--accent-ink); color: var(--accent); }
+.pages a:not([aria-current="page"]):hover { border-color: var(--accent); }
+.pages a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* phases of the sliding Karton */
+.pill[data-phase="slide"], .pill[data-phase="floor"] { background: var(--accent); color: var(--accent-ink); }
+.pill[data-phase="rest"] { background: var(--ink); color: var(--bg); }
+
+/* static friction gauge: needed ω²r against the limit μ_H g, which sits in the middle of the bar */
+.meter { display: grid; gap: 6px; }
+.meter .row { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; }
+.meter .row b { font-weight: 700; }
+.meter output { font-weight: 700; font-size: 14px; color: var(--accent); }
+.meter output[data-ok="false"] { color: var(--zp); }
+.bar { position: relative; height: 12px; border-radius: 999px; background: var(--accent-soft); overflow: hidden; }
+.bar .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--zp); border-radius: 999px; }
+.bar .lim { position: absolute; top: 0; bottom: 0; left: calc(50% - 1.5px); width: 3px; background: var(--ink); }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="titles">
+      <p class="eyebrow">Physik · Rotierende Bezugssysteme</p>
+      <h1>Drehscheibe mit Reibung</h1>
+      <p class="lead">Wie auf Seite 1, aber jetzt mit Reibung. Das Kind hält den Karton an einer Schnur. Lässt es los, muss die Haftreibung den Karton allein auf der Kreisbahn halten. Reicht sie nicht, rutscht er, und die Gleitreibung bremst ihn: erst auf der Scheibe, dann auf dem Boden.</p>
+    </div>
+    <button class="btn small" id="qrBtn" type="button" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm8-2h2v2h-2v-2zm2 2h2v2h-2v-2zm2-2h4v2h-2v2h-2v-4zm-4 4h2v4h-2v-4zm4 2h4v2h-4v-2zm2-2h2v2h-2v-2z"/></svg>
+      QR-Code
+    </button>
+  </header>
+
+  <nav class="pages" aria-label="Seiten">
+    <a href="index.html" id="navOther"><span class="n">1</span>Ohne Reibung</a>
+    <a href="reibung.html" aria-current="page"><span class="n">2</span>Mit Reibung</a>
+  </nav>
+
+  <main class="layout">
+    <section class="stage" aria-label="Simulation">
+      <div class="frames" role="tablist" aria-label="Bezugssystem wählen">
+        <button type="button" role="tab" id="tab-in" data-frame="in" aria-selected="true" aria-controls="views">
+          <span class="k">Mutter</span><span class="s">Inertialsystem</span>
+        </button>
+        <button type="button" role="tab" id="tab-rot" data-frame="rot" aria-selected="false" aria-controls="views">
+          <span class="k">Kind</span><span class="s">rotierendes System</span>
+        </button>
+        <button type="button" role="tab" id="tab-both" data-frame="both" aria-selected="false" aria-controls="views">
+          <span class="k">Beide</span><span class="s">nebeneinander</span>
+        </button>
+      </div>
+
+      <div class="views" id="views" data-mode="in">
+        <figure class="view" id="view-in">
+          <figcaption><span class="dot"></span><span><b>Mutter</b> · Inertialsystem</span></figcaption>
+          <canvas id="cv-in" role="img" aria-label="Drehscheibe aus Sicht der Mutter, die neben der Scheibe steht"></canvas>
+        </figure>
+        <figure class="view" id="view-rot">
+          <figcaption><span class="dot"></span><span><b>Kind</b> · rotierendes System</span></figcaption>
+          <canvas id="cv-rot" role="img" aria-label="Drehscheibe aus Sicht des Kindes, das sich mitdreht"></canvas>
+        </figure>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="play" type="button" aria-label="Pause">
+          <svg id="icoPause" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+          <svg id="icoPlay" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor" hidden><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>
+        </button>
+        <button class="btn primary" id="release" type="button">Schnur loslassen</button>
+        <button class="btn" id="reset" type="button">Zurücksetzen</button>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <article class="explain" aria-live="polite">
+        <span class="pill" id="phasePill" data-phase="held">An der Schnur</span>
+        <h2 id="exTitle">Kreisbahn</h2>
+        <p id="exText"></p>
+      </article>
+
+      <section class="group" aria-labelledby="h-show">
+        <h3 id="h-show">Pfeile anzeigen</h3>
+        <div class="chips">
+          <label class="chip t-v"><input type="checkbox" id="show-v" data-key="v" checked>
+            <svg class="sw" viewBox="0 0 26 12" aria-hidden="true"><path d="M1 6h17" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M16 1.5 25 6l-9 4.5z" fill="currentColor"/></svg>
+            <span class="m"><span class="vec">v</span></span><span class="lbl">Geschwindigkeit</span></label>
+          <label class="chip t-zp"><input type="checkbox" id="show-zp" data-key="zp" checked>
+            <svg class="sw" viewBox="0 0 26 12" aria-hidden="true"><path d="M1 6h17" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M16 1.5 25 6l-9 4.5z" fill="currentColor"/></svg>
+            <span class="m"><span class="vec">a</span><sub>ZP</sub> / <span class="vec">a</span><sub>R</sub></span><span class="lbl">echte Kraft</span></label>
+          <label class="chip t-zf"><input type="checkbox" id="show-zf" data-key="zf" checked>
+            <svg class="sw" viewBox="0 0 26 12" aria-hidden="true"><path d="M1 6h17" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M16 1.5 25 6l-9 4.5z" fill="currentColor"/></svg>
+            <span class="m"><span class="vec">a</span><sub>ZF</sub></span><span class="lbl">Zentrifugal</span></label>
+          <label class="chip t-cor"><input type="checkbox" id="show-cor" data-key="cor" checked>
+            <svg class="sw" viewBox="0 0 26 12" aria-hidden="true"><path d="M1 6h17" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M16 1.5 25 6l-9 4.5z" fill="currentColor"/></svg>
+            <span class="m"><span class="vec">a</span><sub>C</sub></span><span class="lbl">Coriolis</span></label>
+          <label class="chip t-sum"><input type="checkbox" id="show-sum" data-key="sum" checked>
+            <svg class="sw" viewBox="0 0 26 12" aria-hidden="true"><path d="M1 3.6H16V.6L25 6l-9 5.4V8.4H1z" fill="currentColor" fill-opacity=".3" stroke="currentColor" stroke-opacity=".6" stroke-linejoin="round"/></svg>
+            <span class="m"><span class="vec">a</span>′</span><span class="lbl">Summe</span></label>
+          <label class="chip"><input type="checkbox" id="show-trace" data-key="trace" checked>
+            <svg class="sw" viewBox="0 0 26 12" aria-hidden="true" style="color: var(--trace)"><path d="M2 6h22" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity=".6"/><circle cx="5" cy="6" r="2.6" fill="currentColor"/><circle cx="13" cy="6" r="2.6" fill="currentColor"/><circle cx="21" cy="6" r="2.6" fill="currentColor"/></svg>
+            <span class="lbl">Bahnspur &amp; Stroboskop</span></label>
+        </div>
+        <p class="note"><span class="m t-zp"><span class="vec">a</span><sub>ZP</sub></span> (Schnur, Haftreibung) und <span class="m t-zp"><span class="vec">a</span><sub>R</sub></span> (Gleitreibung) kommen von echten Kräften. <span class="m t-zf"><span class="vec">a</span><sub>ZF</sub></span> und <span class="m t-cor"><span class="vec">a</span><sub>C</sub></span> sind Scheinkräfte pro Masse. Es gibt sie nur in der Sicht des Kindes.<span id="inHint"> In der Sicht der Mutter erscheinen sie deshalb nicht.</span> Der breite, blasse Pfeil <span class="m t-sum"><span class="vec">a</span>′</span> ist die Summe aller Beschleunigungen in der Sicht des Kindes. Er zeigt, wie sich <span class="m t-v"><span class="vec">v</span><sub>rel</sub></span> ändert.</p>
+      </section>
+
+      <section class="group" aria-labelledby="h-set">
+        <h3 id="h-set">Einstellungen</h3>
+        <div class="slider">
+          <div class="row"><label for="omega">Winkelgeschwindigkeit <span class="m">ω</span></label><output id="omegaOut" for="omega"></output></div>
+          <input type="range" id="omega" min="-4" max="4" step="0.1" value="2.5">
+        </div>
+        <div class="slider">
+          <div class="row"><label for="radius">Abstand <span class="m">r</span> des Kartons</label><output id="radiusOut" for="radius"></output></div>
+          <input type="range" id="radius" min="0.3" max="0.95" step="0.05" value="0.65">
+        </div>
+        <div class="slider">
+          <div class="row"><label for="muH">Haftreibungszahl <span class="m">μ<sub>H</sub></span></label><output id="muHOut" for="muH"></output></div>
+          <input type="range" id="muH" min="0.05" max="0.8" step="0.05" value="0.35">
+        </div>
+        <div class="slider">
+          <div class="row"><label for="muG">Gleitreibungszahl <span class="m">μ<sub>G</sub></span></label><output id="muGOut" for="muG"></output></div>
+          <input type="range" id="muG" min="0.05" max="0.8" step="0.05" value="0.25">
+        </div>
+        <div class="meter">
+          <div class="row"><b>Haftbedingung beim Loslassen</b><output id="meterOut"></output></div>
+          <div class="bar" aria-hidden="true"><span class="fill" id="meterFill"></span><span class="lim"></span></div>
+          <p class="note" id="meterText"></p>
+        </div>
+        <div class="slider">
+          <div class="row"><span id="tempoLbl" style="font-weight:700">Tempo</span></div>
+          <div class="seg" role="radiogroup" aria-labelledby="tempoLbl">
+            <label><input type="radio" name="tempo" id="tempo-25" value="0.25" checked>0.25×</label>
+            <label><input type="radio" name="tempo" id="tempo-50" value="0.5">0.5×</label>
+            <label><input type="radio" name="tempo" id="tempo-100" value="1">1×</label>
+          </div>
+        </div>
+      </section>
+
+      <section class="group" aria-labelledby="h-num">
+        <h3 id="h-num">Messwerte</h3>
+        <div class="tablewrap">
+          <table id="readout" data-mode="in">
+            <thead><tr><th scope="col" style="text-align:left">Grösse</th><th scope="col" class="c-in">Mutter</th><th scope="col" class="c-rot">Kind</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Abstand <span class="m">r</span><span class="u">m</span></th><td class="c-in" id="o-r-in"></td><td class="c-rot" id="o-r-rot"></td></tr>
+              <tr><th scope="row">Geschwindigkeit <span class="m t-v"><span class="vec">v</span></span> / <span class="m t-v"><span class="vec">v</span><sub>rel</sub></span><span class="u">m/s</span></th><td class="c-in" id="o-v-in"></td><td class="c-rot" id="o-v-rot"></td></tr>
+              <tr><th scope="row">Echte Kraft <span class="m t-zp"><span class="vec">a</span><sub>ZP</sub></span> / <span class="m t-zp"><span class="vec">a</span><sub>R</sub></span><span class="u">m/s²</span></th><td class="c-in" id="o-zp-in"></td><td class="c-rot" id="o-zp-rot"></td></tr>
+              <tr><th scope="row">Zentrifugal <span class="m t-zf"><span class="vec">a</span><sub>ZF</sub></span><span class="u">m/s²</span></th><td class="c-in" title="Im Inertialsystem gibt es keine Scheinkräfte">—</td><td class="c-rot" id="o-zf-rot"></td></tr>
+              <tr><th scope="row">Coriolis <span class="m t-cor"><span class="vec">a</span><sub>C</sub></span><span class="u">m/s²</span></th><td class="c-in" title="Im Inertialsystem gibt es keine Scheinkräfte">—</td><td class="c-rot" id="o-c-rot"></td></tr>
+              <tr><th scope="row">Summe <span class="m t-sum"><span class="vec">a</span></span> / <span class="m t-sum"><span class="vec">a</span>′</span><span class="u">m/s²</span></th><td class="c-in" id="o-sum-in"></td><td class="c-rot" id="o-sum-rot"></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">Die echte Kraft (Schnur, Haft- oder Gleitreibung) ist in beiden Systemen gleich gross. Nur im rotierenden System kommen Zentrifugal- und Coriolisterm dazu.</p>
+      </section>
+
+      <section class="group" aria-labelledby="h-eq">
+        <h3 id="h-eq">Bewegungsgleichung im rotierenden System</h3>
+        <div class="eq" aria-label="m mal a Strich gleich F plus m omega Quadrat r Strich minus 2 m mal omega kreuz v rel">
+          <span class="term t-sum"><span><span class="m">m</span> <span class="m"><span class="vec">a</span>′</span></span><small>beobachtet</small></span>
+          <span class="op">=</span>
+          <span class="term t-zp"><span class="m"><span class="vec">F</span></span><small>echte Kraft<br>(Reibung, Schnur)</small></span>
+          <span class="op">+</span>
+          <span class="term t-zf"><span class="m">mω²<span class="vec">r</span>′</span><small>Zentrifugal&shy;term</small></span>
+          <span class="op">−</span>
+          <span class="term t-cor"><span class="m">2m(<span class="vec">ω</span> × <span class="vec">v</span><sub>rel</sub>)</span><small>Coriolis&shy;term</small></span>
+        </div>
+        <p class="note">Haftreibung: höchstens <span class="m">μ<sub>H</sub>mg</span>. Gleitreibung: <span class="m">μ<sub>G</sub>mg</span>, entgegen der Bewegung relativ zur Unterlage. Auf der Scheibe heisst das entgegen <span class="m t-v"><span class="vec">v</span><sub>rel</sub></span>, auf dem Boden entgegen <span class="m t-v"><span class="vec">v</span></span>.</p>
+      </section>
+
+      <section class="group" aria-labelledby="h-try">
+        <h3 id="h-try">Zum Ausprobieren</h3>
+        <div>
+          <details>
+            <summary>Bleibt der Karton nach dem Loslassen liegen? Sag es voraus, bevor du loslässt.</summary>
+            <p>Die Haftreibung muss die ganze Zentripetalkraft liefern: <span class="m">mω²r ≤ μ<sub>H</sub>mg</span>, also <span class="m">ω²r ≤ μ<sub>H</sub>g</span>. Die Masse kürzt sich heraus. Bei doppeltem ω braucht es viermal so viel Haftreibung, bei doppeltem r nur doppelt so viel.</p>
+          </details>
+          <details>
+            <summary>Wirkt die Gleitreibung auf der Scheibe entgegen <span class="m"><span class="vec">v</span></span> oder entgegen <span class="m"><span class="vec">v</span><sub>rel</sub></span>?</summary>
+            <p>Entgegen <span class="m"><span class="vec">v</span><sub>rel</sub></span>, also entgegen der Bewegung relativ zur Unterlage. Der Karton bleibt hinter der Scheibe zurück, darum nimmt ihn die Reibung in Drehrichtung mit. Die Bahn der Mutter ist deshalb keine Gerade mehr. Auf dem Boden ruht die Unterlage, dort wirkt die Reibung entgegen <span class="m"><span class="vec">v</span></span>.</p>
+          </details>
+          <details>
+            <summary>Der Karton liegt still auf dem Boden, das Kind sieht ihn aber kreisen. Welche Kraft hält ihn auf dieser Kreisbahn?</summary>
+            <p>Keine echte Kraft. Für das Kind ist <span class="m"><span class="vec">v</span><sub>rel</sub> = −<span class="vec">ω</span> × <span class="vec">r</span>′</span>, also <span class="m">v<sub>rel</sub> = ωr</span>. Der Coriolisterm <span class="m">2ωv<sub>rel</sub> = 2ω²r</span> zeigt nach innen, der Zentrifugalterm <span class="m">ω²r</span> nach aussen. Zusammen bleibt <span class="m">ω²r</span> nach innen, genau die Zentripetalbeschleunigung für diese Kreisbahn.</p>
+          </details>
+          <details>
+            <summary>Für das Kind ändert <span class="m"><span class="vec">v</span><sub>rel</sub></span> ständig die Richtung. Welche Beschleunigung dreht den Pfeil?</summary>
+            <p>Die Summe <span class="m t-sum"><span class="vec">a</span>′</span> (breiter, blasser Pfeil). Ihr Anteil längs <span class="m"><span class="vec">v</span><sub>rel</sub></span> ändert den Betrag, ihr Anteil quer zu <span class="m"><span class="vec">v</span><sub>rel</sub></span> dreht die Richtung. Auf der Scheibe zeigt die Gleitreibung <span class="m"><span class="vec">a</span><sub>R</sub></span> genau entgegen <span class="m"><span class="vec">v</span><sub>rel</sub></span>, sie bremst nur. Der Coriolisterm <span class="m"><span class="vec">a</span><sub>C</sub></span> steht immer senkrecht auf <span class="m"><span class="vec">v</span><sub>rel</sub></span>, er dreht nur. Der Zentrifugalterm <span class="m"><span class="vec">a</span><sub>ZF</sub></span> zeigt nach aussen und hat meist beide Anteile. Auf dem Boden zeigt <span class="m"><span class="vec">a</span><sub>R</sub></span> entgegen <span class="m"><span class="vec">v</span></span>, nicht entgegen <span class="m"><span class="vec">v</span><sub>rel</sub></span>, und dreht deshalb mit. Liegt der Karton still, steht <span class="m t-sum"><span class="vec">a</span>′</span> senkrecht auf <span class="m"><span class="vec">v</span><sub>rel</sub></span> und dreht ihn gleichmässig, einmal pro Umdrehung der Scheibe.</p>
+          </details>
+          <details>
+            <summary>Setze <span class="m">μ<sub>G</sub></span> gleich <span class="m">μ<sub>H</sub></span> und danach ganz klein. Was ändert sich?</summary>
+            <p>Ob der Karton losrutscht, entscheidet nur <span class="m">μ<sub>H</sub></span>. Wie er rutscht, entscheidet <span class="m">μ<sub>G</sub></span>. Mit grosser Gleitreibung nimmt die Scheibe den Karton stärker in Drehrichtung mit, und er bleibt auf dem Boden früher liegen. Mit kleiner Gleitreibung nähert sich alles dem Fall ohne Reibung von Seite 1: fast eine Gerade für die Mutter und ein langer Weg über den Boden.</p>
+          </details>
+        </div>
+        <p class="foot">Annahmen: Die Scheibe dreht mit konstantem ω. Der Boden liegt auf gleicher Höhe wie die Scheibe und hat dieselben Reibungszahlen. Der Karton zählt als Punkt: Er ist auf dem Boden, sobald seine Mitte über den Rand rutscht. <span class="m">g = 9.81 m/s²</span>. Die Pfeile zeigen Beschleunigungen (Kraft pro Masse, <span class="m">F = m·a</span>). Pfeile derselben Art haben in beiden Bildern denselben Massstab, so kann man sie vergleichen und addieren. Würde ein Pfeil zu lang, wird der Massstab für alle zusammen kleiner.</p>
+      </section>
+    </aside>
+  </main>
+</div>
+
+<div class="qr-overlay" id="qr" hidden role="dialog" aria-modal="true" aria-labelledby="qrTitle">
+  <div class="qr-box">
+    <h2 id="qrTitle">Mit dem Handy öffnen</h2>
+    <div class="qr-code" id="qrCode"></div>
+    <p class="qr-url" id="qrUrlText"></p>
+    <label for="qrUrl">Adresse dieser Seite</label>
+    <input type="url" id="qrUrl" placeholder="https://…" autocomplete="off" spellcheck="false">
+    <div class="qr-row"><button class="btn small" id="qrClose" type="button">Schliessen</button></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // Address put into the QR code when the page runs inside a frame (e.g. the claude.ai viewer).
+  // When the file is hosted on its own, the page's own address is used instead.
+  const SHARE_URL = 'https://david-1-2-3.github.io/drehscheibe-scheinkraefte/reibung.html';
+
+  const VR = 2.2;               // half-width of the view, m
+  const DISC_R = 1.0;           // turntable radius, m
+  const KARTON = 0.16;          // side of the cardboard, m
+  const PHI0 = -Math.PI / 2;    // Karton starts below the child, as on the slides
+  const MOTHER = { x: -1.42, y: -0.8 };
+  const HAND = { x: 0.127, y: -0.028 };   // the child's hand holding the string, disc coordinates
+  const STROBE = 0.1;           // s between stroboscope marks
+  const GONE_R = 3.2;           // beyond this the Karton is outside every view
+  const G = 9.81;               // m/s²
+  const H = 0.001;              // integration step, s
+  const KA = 0.12;              // arrow length in m per m/s²
+  const KV = 0.5;               // arrow length in m per m/s
+  const LMAX = 1.1;             // the arrow scale shrinks so that no arrow gets longer than this, m
+  const MATH = '"STIX Two Text", "Cambria Math", "Times New Roman", serif';
+  const HASH = { in: 'mutter', rot: 'kind', both: 'beide' };
+  const QR_KEY = 'drehscheibe-reibung-qr-url';
+
+  const $ = sel => document.querySelector(sel);
+
+  const S = {
+    playing: !matchMedia('(prefers-reduced-motion: reduce)').matches,
+    t: 0, theta: 0, omega: 2.5, r0: 0.65, muH: 0.35, muG: 0.25, timeScale: 0.25,
+    phase: 'held',              // 'held' | 'stuck' | 'slide' | 'floor' | 'rest' | 'gone'
+    dp: null, dang: 0,          // position and orientation on the disc while held or stuck
+    p: null, v: null, ang: 0, spin: 0,   // inertial state once the Karton slides
+    tRest: 0,
+    hist: [], strobes: [], lastSample: -Infinity, nextStrobe: 0,
+    mode: 'in',
+    show: { v: true, zp: true, zf: true, cor: true, sum: true, trace: true },
+  };
+  let dirty = true;
+
+  const rot = (p, a) => {
+    const c = Math.cos(a), s = Math.sin(a);
+    return { x: c * p.x - s * p.y, y: s * p.x + c * p.y };
+  };
+  const len = p => Math.hypot(p.x, p.y);
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const onDisc = () => S.phase === 'held' || S.phase === 'stuck';
+  const holds = r => S.omega * S.omega * r <= S.muH * G;
+  const revolution = () => Math.min(2 * Math.PI / Math.max(Math.abs(S.omega), 1e-6), 8);
+
+  /* ---------- physics ---------- */
+
+  // Kinetic friction per mass, against the motion relative to the ground underneath:
+  // on the disc that is v − ω×r, on the floor (at rest) it is v itself
+  function friction(p, v) {
+    const f = S.muG * G, w = S.omega;
+    const u = S.phase === 'slide' ? { x: v.x + w * p.y, y: v.y - w * p.x } : v;
+    const m = len(u);
+    if (m > 1e-9) return { x: -f * u.x / m, y: -f * u.y / m };
+    if (S.phase !== 'slide') return { x: 0, y: 0 };
+    const r = len(p) || 1;      // just breaking loose: it starts to slip outwards
+    return { x: -f * p.x / r, y: -f * p.y / r };
+  }
+
+  // Karton in the inertial frame: position, velocity, real acceleration, orientation
+  function karton() {
+    const w = S.omega;
+    if (onDisc()) {
+      const p = rot(S.dp, S.theta);
+      return { p, v: { x: -w * p.y, y: w * p.x }, a: { x: -w * w * p.x, y: -w * w * p.y }, ang: S.theta + S.dang };
+    }
+    const sliding = S.phase === 'slide' || S.phase === 'floor';
+    return { p: S.p, v: S.v, a: sliding ? friction(S.p, S.v) : { x: 0, y: 0 }, ang: S.ang };
+  }
+
+  // The same Karton described in the frame rotating with the disc
+  function kinematics() {
+    const K = karton(), w = S.omega, th = S.theta;
+    const pr = rot(K.p, -th);
+    const vRel = rot({ x: K.v.x + w * K.p.y, y: K.v.y - w * K.p.x }, -th);  // v − ω×r
+    const aR = rot(K.a, -th);
+    const aZF = { x: w * w * pr.x, y: w * w * pr.y };                         // ω² r′
+    const aC = { x: 2 * w * vRel.y, y: -2 * w * vRel.x };                     // −2 ω×v_rel
+    return { K, pr, vRel, aR, aZF, aC };
+  }
+
+  function sample(force) {
+    if (S.phase === 'gone') return;
+    if (S.phase === 'rest' && S.t - S.tRest > revolution() + 0.02) return;   // the child's circle is closed
+    if (!force && S.t - S.lastSample < 0.016) return;
+    S.lastSample = S.t;
+    const p = karton().p;
+    S.hist.push({ x: p.x, y: p.y, th: S.theta, t: S.t });
+    if (onDisc()) {
+      const win = revolution() * 0.97;
+      while (S.hist.length && S.hist[0].t < S.t - win) S.hist.shift();
+    }
+    if (S.hist.length > 6000) S.hist.shift();
+  }
+
+  function strobe() {
+    const due = S.phase !== 'rest' || S.t - S.tRest <= revolution();
+    while (S.nextStrobe <= S.t) {
+      if (due) S.strobes.push({ x: S.p.x, y: S.p.y, th: S.theta - S.omega * (S.t - S.nextStrobe) });
+      S.nextStrobe += STROBE;
+    }
+  }
+
+  function startSlide() {
+    const K = karton();
+    S.p = K.p; S.v = K.v; S.ang = K.ang; S.spin = S.omega;
+    S.phase = 'slide';
+    S.nextStrobe = S.t; S.strobes = [];
+    sample(true);
+  }
+
+  // A Karton that only friction holds may break loose after a slider change
+  function checkGrip() {
+    if (S.phase === 'stuck' && !holds(len(S.dp))) startSlide();
+  }
+
+  // One integration step; returns true when the phase changed
+  function substep(h) {
+    const w = S.omega, f = S.muG * G;
+    S.t += h;
+    S.theta += w * h;
+    const ph = S.phase;
+    if (ph === 'stuck' && !holds(len(S.dp))) { startSlide(); return true; }
+    if (ph === 'rest') strobe();
+    if (ph !== 'slide' && ph !== 'floor') return false;
+
+    let changed = false;
+    if (ph === 'floor') {
+      const s = len(S.v);
+      if (s <= f * h) {
+        S.v = { x: 0, y: 0 }; S.phase = 'rest'; S.tRest = S.t; changed = true;
+      } else {
+        S.v = { x: S.v.x * (1 - f * h / s), y: S.v.y * (1 - f * h / s) };
+      }
+    } else {
+      const a = friction(S.p, S.v);
+      S.v = { x: S.v.x + a.x * h, y: S.v.y + a.y * h };
+    }
+    S.p = { x: S.p.x + S.v.x * h, y: S.p.y + S.v.y * h };
+    S.spin += ((ph === 'slide' ? w : 0) - S.spin) * Math.min(1, 5 * h);
+    S.ang += S.spin * h;
+
+    if (S.phase === 'slide') {
+      const r = len(S.p);
+      if (r > DISC_R) {
+        S.phase = 'floor'; changed = true;
+      } else if (len({ x: S.v.x + w * S.p.y, y: S.v.y - w * S.p.x }) < 2 * f * h && holds(r)) {
+        // at rest on the disc again and static friction can hold it
+        S.dp = rot(S.p, -S.theta); S.dang = S.ang - S.theta;
+        S.phase = 'stuck'; changed = true;
+      }
+    }
+    if (S.phase !== 'stuck') strobe();
+    if (len(S.p) > GONE_R) { S.phase = 'gone'; changed = true; }
+    return changed;
+  }
+
+  function step(dt) {
+    let changed = false;
+    for (let left = dt; left > 1e-9; left -= H) changed = substep(Math.min(H, left)) || changed;
+    sample(false);
+    if (changed) updateUI();
+    dirty = true;
+  }
+
+  function release() {
+    if (S.phase !== 'held') return;
+    if (holds(len(S.dp))) S.phase = 'stuck'; else startSlide();
+    S.playing = true;
+    updateUI();
+  }
+
+  function reset() {
+    S.t = 0; S.theta = 0;
+    S.phase = 'held';
+    S.dp = { x: S.r0 * Math.cos(PHI0), y: S.r0 * Math.sin(PHI0) }; S.dang = 0;
+    S.p = S.v = null;
+    S.hist = []; S.strobes = []; S.lastSample = -Infinity;
+    sample(true);
+    updateUI();
+  }
+
+  /* ---------- drawing ---------- */
+
+  const C = {};
+  const TOKENS = ['floor', 'grid', 'disc', 'discline', 'figure', 'ring', 'karton', 'kartonedge',
+    'trace', 'halo', 'shadow', 'mark', 'v', 'zp', 'zf', 'cor', 'sum'];
+  function readColors() {
+    const cs = getComputedStyle(document.documentElement);
+    for (const k of TOKENS) C[k] = cs.getPropertyValue('--' + k).trim();
+    dirty = true;
+  }
+
+  function head(ctx, x, y, ux, uy, size) {
+    const bx = x - ux * size, by = y - uy * size, hw = size * 0.55;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(bx - uy * hw, by + ux * hw);
+    ctx.lineTo(bx + uy * hw, by - ux * hw);
+    ctx.closePath();
+  }
+
+  // Arrow from (x0,y0) by (dx,dy) screen pixels, with a halo so it reads on any background
+  function arrow(ctx, x0, y0, dx, dy, col, lw) {
+    const L = Math.hypot(dx, dy);
+    if (L < 3) return false;
+    const ux = dx / L, uy = dy / L;
+    const hl = Math.min(L * 0.55, lw * 3.6);
+    const tx = x0 + dx, ty = y0 + dy, bx = tx - ux * hl, by = ty - uy * hl;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = C.halo;
+    ctx.lineWidth = lw + 3;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(bx, by); ctx.stroke();
+    ctx.lineWidth = 3;
+    head(ctx, tx, ty, ux, uy, hl); ctx.stroke();
+    ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = lw;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(bx + ux, by + uy); ctx.stroke();
+    head(ctx, tx, ty, ux, uy, hl); ctx.fill();
+    return true;
+  }
+
+  // The sum a′ as a broad, pale arrow underneath, so the arrows it is made of stay readable on top
+  function broadArrow(ctx, x0, y0, dx, dy, col, lw) {
+    const L = Math.hypot(dx, dy);
+    if (L < 3) return false;
+    const ux = dx / L, uy = dy / L, b = lw * 1.6, hl = Math.min(L * 0.6, lw * 6);
+    const tx = x0 + dx, ty = y0 + dy, bx = tx - ux * hl, by = ty - uy * hl;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x0 - uy * b, y0 + ux * b);
+    ctx.lineTo(bx - uy * b, by + ux * b);
+    ctx.lineTo(bx - uy * b * 2.1, by + ux * b * 2.1);
+    ctx.lineTo(tx, ty);
+    ctx.lineTo(bx + uy * b * 2.1, by - ux * b * 2.1);
+    ctx.lineTo(bx + uy * b, by - ux * b);
+    ctx.lineTo(x0 + uy * b, y0 - ux * b);
+    ctx.closePath();
+    ctx.fillStyle = col; ctx.globalAlpha = 0.28; ctx.fill();
+    ctx.strokeStyle = col; ctx.globalAlpha = 0.6; ctx.lineWidth = 1; ctx.lineJoin = 'round'; ctx.stroke();
+    ctx.restore();
+    return true;
+  }
+
+  // Pixels per unit for one kind of arrow. Linear and shared by every arrow of that kind in both views,
+  // so arrows can be compared and added; it shrinks for all of them together when the longest would pass LMAX
+  function arrowScale(k, vecs, s) {
+    const m = Math.max(...vecs.map(len));
+    return (m * k > 1e-9 ? LMAX * Math.tanh(m * k / LMAX) / m : k) * s;
+  }
+
+  // Italic vector symbol with an arrow above and a subscript, e.g. a⃗_ZF
+  function vlabel(ctx, x, y, sym, sub, col, fs) {
+    ctx.save();
+    const f1 = `italic ${fs}px ${MATH}`, f2 = `italic ${Math.round(fs * 0.68)}px ${MATH}`;
+    ctx.font = f1; const w1 = ctx.measureText(sym).width, wa = ctx.measureText(sym[0]).width;
+    ctx.font = f2; const w2 = sub ? ctx.measureText(sub).width : 0;
+    const x0 = x - (w1 + w2 + 1) / 2, base = y + fs * 0.3;
+    ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.strokeStyle = C.halo; ctx.lineWidth = 4; ctx.fillStyle = col;
+    ctx.font = f1; ctx.strokeText(sym, x0, base); ctx.fillText(sym, x0, base);
+    if (sub) {
+      ctx.font = f2;
+      ctx.strokeText(sub, x0 + w1 + 1, base + fs * 0.2);
+      ctx.fillText(sub, x0 + w1 + 1, base + fs * 0.2);
+    }
+    const ay = base - fs * 0.8, ax0 = x0 + fs * 0.06, ax1 = x0 + Math.max(wa, fs * 0.45) + fs * 0.1, hs = fs * 0.16;
+    for (const [c, lw] of [[C.halo, 3.5], [col, Math.max(1.2, fs * 0.075)]]) {
+      ctx.strokeStyle = c; ctx.lineWidth = lw;
+      ctx.beginPath();
+      ctx.moveTo(ax0, ay); ctx.lineTo(ax1, ay);
+      ctx.moveTo(ax1 - hs, ay - hs * 0.6); ctx.lineTo(ax1, ay); ctx.lineTo(ax1 - hs, ay + hs * 0.6);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Draw a figure in local metre coordinates (y up), rotated by ang
+  function figure(ctx, x, y, ang, s, draw) {
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(-ang); ctx.scale(s, -s);
+    ctx.fillStyle = C.figure; ctx.strokeStyle = C.figure;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    draw(ctx);
+    ctx.restore();
+  }
+
+  function drawChild(ctx) {
+    ctx.beginPath(); ctx.arc(0, 0.15, 0.075, 0, 2 * Math.PI); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-0.068, 0.062); ctx.lineTo(0.068, 0.062); ctx.lineTo(0.055, -0.07); ctx.lineTo(-0.055, -0.07);
+    ctx.closePath(); ctx.fill();
+    ctx.lineWidth = 0.046;
+    ctx.beginPath();
+    ctx.moveTo(-0.055, 0.045); ctx.lineTo(-0.127, -0.028);
+    ctx.moveTo(0.055, 0.045); ctx.lineTo(0.127, -0.028);
+    ctx.stroke();
+    ctx.lineWidth = 0.052;
+    ctx.beginPath();
+    ctx.moveTo(-0.033, -0.066); ctx.lineTo(-0.1, -0.138); ctx.lineTo(-0.028, -0.21);
+    ctx.moveTo(0.033, -0.066); ctx.lineTo(0.1, -0.138); ctx.lineTo(0.028, -0.21);
+    ctx.stroke();
+  }
+
+  function drawMother(ctx) {
+    ctx.beginPath(); ctx.arc(0, 0.26, 0.058, 0, 2 * Math.PI); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-0.085, 0.185); ctx.lineTo(0.085, 0.185); ctx.lineTo(0.05, 0.03);
+    ctx.lineTo(0.08, -0.07); ctx.lineTo(-0.08, -0.07); ctx.lineTo(-0.05, 0.03);
+    ctx.closePath(); ctx.fill();
+    ctx.lineWidth = 0.032;
+    ctx.beginPath();
+    ctx.moveTo(-0.075, 0.165); ctx.lineTo(-0.135, 0.07); ctx.lineTo(-0.055, 0.025);
+    ctx.moveTo(0.075, 0.165); ctx.lineTo(0.135, 0.07); ctx.lineTo(0.055, 0.025);
+    ctx.stroke();
+    ctx.lineWidth = 0.052;
+    ctx.beginPath();
+    ctx.moveTo(-0.042, -0.06); ctx.lineTo(-0.048, -0.36);
+    ctx.moveTo(0.042, -0.06); ctx.lineTo(0.048, -0.36);
+    ctx.stroke();
+  }
+
+  function drawView(V) {
+    const { ctx, w, h, dpr, frame } = V;
+    if (!w || !h) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const s = Math.min(w, h) / (2 * VR), cx = w / 2, cy = h / 2;
+    const X = p => cx + p.x * s, Y = p => cy - p.y * s;
+    const rotating = frame === 'rot';
+    const aRoom = rotating ? -S.theta : 0;   // how room-fixed things appear in this view
+    const aDisc = rotating ? 0 : S.theta;    // how disc-fixed things appear in this view
+    const w0 = S.omega, turning = Math.abs(w0) > 0.05;
+
+    ctx.fillStyle = C.floor;
+    ctx.fillRect(0, 0, w, h);
+
+    // floor tiles, fixed in the room
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let k = -7; k <= 7; k++) {
+      const g = k * 0.5;
+      for (const [a, b] of [[{ x: g, y: -3.5 }, { x: g, y: 3.5 }], [{ x: -3.5, y: g }, { x: 3.5, y: g }]]) {
+        const pa = rot(a, aRoom), pb = rot(b, aRoom);
+        ctx.moveTo(X(pa), Y(pa)); ctx.lineTo(X(pb), Y(pb));
+      }
+    }
+    ctx.stroke();
+
+    // in the child's view the surroundings turn: lilac ring as on the slides
+    if (rotating && turning) {
+      const R = 1.2 * s, b = aRoom + 0.5, span = 2 * Math.PI - 0.9;
+      ctx.save();
+      ctx.globalAlpha = 0.85;
+      ctx.strokeStyle = C.ring; ctx.fillStyle = C.ring;
+      ctx.lineWidth = 0.075 * s; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(cx, cy, R, -(b + span), -b); ctx.stroke();
+      const e = w0 > 0 ? b : b + span;
+      const tx = w0 > 0 ? Math.sin(e) : -Math.sin(e), ty = w0 > 0 ? -Math.cos(e) : Math.cos(e);
+      const px = cx + R * Math.cos(e), py = cy - R * Math.sin(e), hs = 0.2 * s;
+      head(ctx, px + tx * hs, py - ty * hs, tx, -ty, hs * 1.1); ctx.fill();
+      ctx.restore();
+    }
+
+    // turntable
+    ctx.save();
+    ctx.shadowColor = C.shadow; ctx.shadowBlur = 0.12 * s; ctx.shadowOffsetY = 0.03 * s;
+    ctx.fillStyle = C.disc;
+    ctx.beginPath(); ctx.arc(cx, cy, DISC_R * s, 0, 2 * Math.PI); ctx.fill();
+    ctx.restore();
+
+    ctx.strokeStyle = C.discline; ctx.lineCap = 'round';
+    ctx.lineWidth = Math.max(1, 0.011 * s);
+    ctx.beginPath();
+    for (let i = 0; i < 36; i++) {
+      const a = aDisc + i * Math.PI / 18, r1 = i % 3 ? 0.93 : 0.86;
+      ctx.moveTo(cx + r1 * s * Math.cos(a), cy - r1 * s * Math.sin(a));
+      ctx.lineTo(cx + 0.98 * s * Math.cos(a), cy - 0.98 * s * Math.sin(a));
+    }
+    ctx.stroke();
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = aDisc + i * Math.PI / 3 + Math.PI / 6;
+      ctx.moveTo(cx + 0.32 * s * Math.cos(a), cy - 0.32 * s * Math.sin(a));
+      ctx.lineTo(cx + 0.8 * s * Math.cos(a), cy - 0.8 * s * Math.sin(a));
+    }
+    ctx.stroke();
+    ctx.restore();
+    // a marker on the rim makes the turning visible
+    ctx.fillStyle = C.figure;
+    ctx.beginPath();
+    ctx.arc(cx + 0.895 * s * Math.cos(aDisc + Math.PI / 2), cy - 0.895 * s * Math.sin(aDisc + Math.PI / 2), Math.max(3, 0.035 * s), 0, 2 * Math.PI);
+    ctx.fill();
+
+    // trace and stroboscope marks
+    if (S.show.trace) {
+      const pt = q => (rotating ? rot(q, -q.th) : q);
+      if (S.hist.length > 1) {
+        ctx.save();
+        ctx.globalAlpha = 0.7;
+        ctx.strokeStyle = C.trace;
+        ctx.lineWidth = Math.max(2, 0.024 * s);
+        ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+        ctx.beginPath();
+        S.hist.forEach((q, i) => {
+          const p = pt(q);
+          if (i) ctx.lineTo(X(p), Y(p)); else ctx.moveTo(X(p), Y(p));
+        });
+        ctx.stroke();
+        ctx.restore();
+      }
+      const r = Math.max(2.5, 0.03 * s);
+      ctx.fillStyle = C.trace; ctx.strokeStyle = C.halo; ctx.lineWidth = 1.5;
+      for (const q of S.strobes) {
+        const p = pt(q);
+        ctx.beginPath(); ctx.arc(X(p), Y(p), r, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+      }
+    }
+
+    figure(ctx, cx, cy, aDisc, s, drawChild);
+
+    // Karton
+    const kin = kinematics(), K = kin.K;
+    const kp = rotating ? kin.pr : K.p;
+    if (S.phase === 'held') {
+      // the string from the child's hand to the Karton
+      const hp = rot(HAND, aDisc), d = len(kp) || 1, e = 1 - KARTON / 2 / d;
+      ctx.save();
+      ctx.strokeStyle = C.mark; ctx.lineWidth = Math.max(1.5, 0.012 * s); ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(X(hp), Y(hp)); ctx.lineTo(X({ x: kp.x * e, y: kp.y * e }), Y({ x: kp.x * e, y: kp.y * e })); ctx.stroke();
+      ctx.restore();
+    }
+    if (S.phase !== 'gone') {
+      const half = KARTON / 2 * s;
+      ctx.save();
+      ctx.translate(X(kp), Y(kp)); ctx.rotate(-(K.ang + aRoom));
+      ctx.shadowColor = C.shadow; ctx.shadowBlur = 0.05 * s; ctx.shadowOffsetY = 0.015 * s;
+      ctx.fillStyle = C.karton; ctx.fillRect(-half, -half, 2 * half, 2 * half);
+      ctx.shadowColor = 'transparent';
+      ctx.strokeStyle = C.kartonedge; ctx.lineWidth = 1;
+      ctx.strokeRect(-half, -half, 2 * half, 2 * half);
+      ctx.restore();
+    }
+
+    const mp = rot(MOTHER, aRoom);
+    figure(ctx, X(mp), Y(mp), aRoom, s, drawMother);
+
+    // rotation sense of the disc, in the mother's view
+    if (!rotating && turning) {
+      const R = 1.1 * s, a0 = 0.18 * Math.PI, a1 = 0.36 * Math.PI;
+      ctx.save();
+      ctx.strokeStyle = C.mark; ctx.fillStyle = C.mark;
+      ctx.lineWidth = Math.max(1.5, 0.018 * s); ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(cx, cy, R, -a1, -a0); ctx.stroke();
+      const e = w0 > 0 ? a1 : a0;
+      const tx = w0 > 0 ? -Math.sin(e) : Math.sin(e), ty = w0 > 0 ? Math.cos(e) : -Math.cos(e);
+      const hs = Math.max(7, 0.09 * s);
+      head(ctx, cx + R * Math.cos(e) + tx * hs * 0.6, cy - R * Math.sin(e) - ty * hs * 0.6, tx, -ty, hs); ctx.fill();
+      const am = (a0 + a1) / 2, fs = Math.round(clamp(0.16 * s, 14, 24));
+      ctx.font = `italic ${fs}px ${MATH}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('ω', cx + (R + 0.15 * s) * Math.cos(am), cy - (R + 0.15 * s) * Math.sin(am));
+      ctx.restore();
+    }
+
+    // vectors
+    if (S.phase !== 'gone') {
+      const real = onDisc() ? 'ZP' : 'R';
+      const aSum = { x: kin.aR.x + kin.aZF.x + kin.aC.x, y: kin.aR.y + kin.aZF.y + kin.aC.y };   // a′, what the child observes
+      const ka = arrowScale(KA, [kin.aR, kin.aZF, kin.aC, aSum], s), kv = arrowScale(KV, [K.v, kin.vRel], s);
+      const list = [];
+      if (rotating) {
+        if (S.show.sum) list.push([aSum, ka, C.sum, 'a′', '', true]);
+        if (S.show.v) list.push([kin.vRel, kv, C.v, 'v', 'rel']);
+        if (S.show.zp) list.push([kin.aR, ka, C.zp, 'a', real]);
+        if (S.show.zf) list.push([kin.aZF, ka, C.zf, 'a', 'ZF']);
+        if (S.show.cor) list.push([kin.aC, ka, C.cor, 'a', 'C']);
+      } else {
+        if (S.show.v) list.push([K.v, kv, C.v, 'v', onDisc() ? 't' : '']);
+        if (S.show.zp) list.push([K.a, ka, C.zp, 'a', real]);
+      }
+      const ox = X(kp), oy = Y(kp);
+      const lw = Math.max(2.5, 0.03 * s), fs = Math.round(clamp(0.14 * s, 13, 22));
+      const labels = [];
+      for (const [vec, k, col, sym, sub, broad] of list) {
+        const m = len(vec);
+        if (m < 1e-9) continue;
+        const L = m * k;
+        const ux = vec.x / m, uy = -vec.y / m;
+        if ((broad ? broadArrow : arrow)(ctx, ox, oy, ux * L, uy * L, col, lw)) {
+          // label beside the tip, on the right of the arrow (above it for horizontal arrows), as on the slides
+          const flip = Math.abs(uy) > 0.2 ? uy > 0 : ux > 0;
+          const px = flip ? uy : -uy, py = flip ? -ux : ux;
+          const back = Math.min(L * 0.3, fs * 0.8), off = fs * (0.75 + 0.45 * Math.abs(px));
+          labels.push([ox + ux * (L - back) + px * off, oy + uy * (L - back) + py * off, sym, sub, col]);
+        }
+      }
+      for (const [x, y, sym, sub, col] of labels) {
+        vlabel(ctx, clamp(x, fs * 1.2, w - fs * 1.2), clamp(y, fs * 1.2, h - fs * 0.8), sym, sub, col, fs);
+      }
+    }
+  }
+
+  /* ---------- UI ---------- */
+
+  const views = [
+    { frame: 'in', canvas: $('#cv-in') },
+    { frame: 'rot', canvas: $('#cv-rot') },
+  ];
+  for (const V of views) { V.ctx = V.canvas.getContext('2d'); V.w = 0; V.h = 0; V.dpr = 1; }
+
+  const ro = new ResizeObserver(entries => {
+    for (const e of entries) {
+      const V = views.find(v => v.canvas === e.target);
+      const r = e.contentRect;
+      V.w = r.width; V.h = r.height;
+      V.dpr = Math.min(window.devicePixelRatio || 1, 2);
+      V.canvas.width = Math.max(1, Math.round(r.width * V.dpr));
+      V.canvas.height = Math.max(1, Math.round(r.height * V.dpr));
+    }
+    dirty = true;
+  });
+  views.forEach(V => ro.observe(V.canvas));
+
+  const vec = (sym, sub, cls) =>
+    `<span class="m${cls ? ' ' + cls : ''}"><span class="vec">${sym}</span>${sub ? `<sub>${sub}</sub>` : ''}</span>`;
+  const vT = vec('v', 't', 't-v'), vI = vec('v', '', 't-v'), vRel = vec('v', 'rel', 't-v');
+  const aZP = vec('a', 'ZP', 't-zp'), aR = vec('a', 'R', 't-zp'), aZF = vec('a', 'ZF', 't-zf'), aC = vec('a', 'C', 't-cor');
+  const aS = '<span class="m t-sum"><span class="vec">a</span>′</span>';
+  const mm = s => `<span class="m">${s}</span>`;
+
+  function explanation() {
+    const w = S.omega, ph = S.phase === 'gone' ? 'floor' : S.phase;
+    const r = onDisc() ? len(S.dp) : S.r0;
+    const need = `${mm('ω²r')} = ${(w * w * r).toFixed(2)} m/s²`, lim = `${mm('μ<sub>H</sub>g')} = ${(S.muH * G).toFixed(2)} m/s²`;
+    const side = w > 0 ? 'rechts' : 'links', dir = w > 0 ? 'im Uhrzeigersinn' : 'gegen den Uhrzeigersinn';
+    const T = 'Ein Vorgang, zwei Beschreibungen';
+    let out;
+    if (Math.abs(w) <= 0.05) {
+      out = ['Scheibe steht still', `Bei ${mm('ω = 0')} sind beide Bezugssysteme gleich, es gibt keine Scheinkräfte. ` +
+        (ph === 'slide' || ph === 'floor' ? `Nur die Gleitreibung ${aR} bremst den Karton.` : 'Stelle unten eine Winkelgeschwindigkeit ein.')];
+    } else if (S.mode === 'in') {
+      out = {
+        held: ['Kreisbahn',
+          `Für die Mutter läuft der Karton auf einer Kreisbahn mit ${vT}. Die nötige Zentripetalbeschleunigung ${aZP} liefern im Moment Schnur und Haftreibung zusammen. Lässt das Kind die Schnur los, muss die Haftreibung allein reichen. Bleibt der Karton liegen?`],
+        stuck: ['Kreisbahn ohne Schnur',
+          `Die Haftreibung allein hält den Karton auf der Kreisbahn. Sie muss ${need} liefern und schafft bis zu ${lim}. Erhöhe ω oder schiebe den Karton weiter nach aussen, bis er rutscht.`],
+        slide: ['Die Bahn krümmt sich',
+          `Der Karton rutscht über die Scheibe. Die Gleitreibung ${aR} wirkt entgegen der Bewegung relativ zur Scheibe, nicht entgegen ${vI}. Der Karton bleibt hinter der Scheibe zurück, darum nimmt ihn die Reibung in Drehrichtung mit. Ohne Reibung wäre die Bahn eine Gerade, jetzt krümmt sie sich mit der Drehung.`],
+        floor: ['Gerade, gebremst',
+          `Der Karton ist über den Rand auf den Boden gerutscht. Der Boden ruht, darum wirkt die Gleitreibung ${aR} jetzt genau entgegen ${vI}. Der Karton läuft geradeaus und wird gleichmässig langsamer, die Stroboskop-Punkte rücken zusammen.`],
+        rest: ['Karton liegt still',
+          'Der Karton liegt auf dem Boden. In der Ebene wirkt keine Kraft mehr, es gibt keine Beschleunigung. Für die Mutter ist die Bewegung zu Ende. Wechsle zur Sicht des Kindes.'],
+      }[ph];
+    } else if (S.mode === 'rot') {
+      out = {
+        held: ['Karton in Ruhe',
+          `Das Kind dreht sich mit, für das Kind ruht der Karton. Die echte Kraft ${aZP} von Schnur und Haftreibung und der Zentrifugalterm ${aZF} heben sich auf. Lässt das Kind los, muss die Haftreibung allein gegen ${aZF} halten.`],
+        stuck: ['Karton bleibt liegen',
+          `Die Haftreibung ${aZP} hält dem Zentrifugalterm ${aZF} allein stand. Sie muss ${need} liefern und schafft bis zu ${lim}. Die Summe ist null, der Karton ruht.`],
+        slide: ['Gebremste Spirale',
+          `Der Zentrifugalterm ${aZF} ist grösser als die Gleitreibung und treibt den Karton nach aussen. Der Coriolisterm ${aC} lenkt ihn nach ${side} ab. Die Gleitreibung ${aR} zeigt genau entgegen ${vRel}, denn die Scheibe ist die Unterlage, auf der auch das Kind sitzt. Die Summe ${aS} zeigt, wie sich ${vRel} ändert: Ihr Anteil quer zu ${vRel} dreht ihn.`],
+        floor: ['Der Boden dreht sich weg',
+          `Jetzt rutscht der Karton auf dem Boden, und der Boden dreht sich für das Kind. Die Gleitreibung ${aR} zeigt deshalb nicht mehr entgegen ${vRel}, sondern entgegen der Bewegung relativ zum Boden. Für das Kind wird der Karton nicht langsamer, sondern schneller.`],
+        rest: ['Kreisbahn ohne echte Kraft',
+          `Der Karton liegt still auf dem Boden. Für das Kind kreist er aber ${dir} um die Scheibe, mit ${vRel} = ${mm('−<span class="vec">ω</span> × <span class="vec">r</span>′')}. Es wirkt keine echte Kraft. Die Zentripetalbeschleunigung liefern allein die Scheinkräfte: Der Coriolisterm ${aC} zeigt nach innen und ist doppelt so gross wie der Zentrifugalterm ${aZF} nach aussen. Es bleibt ${mm('2ω²r − ω²r = ω²r')} nach innen. Diese Summe ${aS} steht senkrecht auf ${vRel} und dreht ihn gleichmässig im Kreis.`],
+      }[ph];
+    } else {
+      out = [T, {
+        held: `Links: Kreisbahn, Schnur und Haftreibung liefern ${aZP}. Rechts: Der Karton ruht, weil ${aZP} und ${aZF} sich aufheben. Lass die Schnur los und vergleiche.`,
+        stuck: `Links: Kreisbahn, die Haftreibung allein liefert ${aZP}. Rechts: ${aZP} und ${aZF} heben sich auf, der Karton ruht.`,
+        slide: `Die Gleitreibung ${aR} ist eine echte Kraft. In beiden Bildern ist sie derselbe Pfeil, rechts nur mitgedreht. Links krümmt sie die Bahn in Drehrichtung, rechts bremst sie die Spirale aus ${aZF} und ${aC}.`,
+        floor: `Links: gerade Linie, gebremst durch ${aR}. Rechts: Der Boden dreht sich unter dem Karton weg, ${aZF} und ${aC} krümmen die Bahn.`,
+        rest: `Links liegt der Karton still. Rechts kreist er, ohne dass eine echte Kraft wirkt, nur durch ${aZF} und ${aC}. Beides beschreibt denselben Vorgang.`,
+      }[ph]];
+    }
+    out = out.slice();
+    if (S.phase === 'gone') out[1] += ' <strong>Der Karton hat das Bild verlassen.</strong> Mit «Zurücksetzen» startest du neu.';
+    return out;
+  }
+
+  const PILL = { held: 'An der Schnur', stuck: 'Karton haftet', slide: 'Karton rutscht', floor: 'Auf dem Boden', rest: 'Karton liegt still', gone: 'Karton weg' };
+  const BTN = { held: 'Schnur loslassen', stuck: 'Karton haftet', slide: 'Karton rutscht …', floor: 'Karton rutscht …', rest: 'Karton liegt still', gone: 'Karton weg' };
+
+  function updateUI() {
+    const rel = $('#release'), rs = $('#reset');
+    rel.disabled = S.phase !== 'held';
+    rel.textContent = BTN[S.phase];
+    rs.classList.toggle('primary', S.phase === 'rest' || S.phase === 'gone');
+
+    const pill = $('#phasePill');
+    pill.dataset.phase = S.phase;
+    pill.textContent = PILL[S.phase];
+
+    const [title, text] = explanation();
+    $('#exTitle').textContent = title;
+    $('#exText').innerHTML = text;
+
+    $('#inHint').hidden = S.mode !== 'in';
+    $('#radius').disabled = !onDisc();
+    $('#readout').dataset.mode = S.mode;
+    updatePlay();
+    updateOutputs();
+    dirty = true;
+  }
+
+  function updatePlay() {
+    $('#icoPause').hidden = !S.playing;
+    $('#icoPlay').hidden = S.playing;
+    $('#play').setAttribute('aria-label', S.playing ? 'Pause' : 'Abspielen');
+  }
+
+  function updateOutputs() {
+    const w = S.omega;
+    const rpm = Math.round(Math.abs(w) * 60 / (2 * Math.PI));
+    $('#omegaOut').textContent = Math.abs(w) <= 0.05
+      ? '0 rad/s · steht still'
+      : `${w.toFixed(1)} rad/s · ${rpm} U/min · ${w > 0 ? 'gegen den Uhrzeigersinn' : 'im Uhrzeigersinn'}`;
+    $('#radiusOut').textContent = `${S.r0.toFixed(2)} m (Scheibe: ${DISC_R.toFixed(2)} m)`;
+    $('#muHOut').textContent = `${S.muH.toFixed(2)} · hält bis ${(S.muH * G).toFixed(2)} m/s²`;
+    $('#muGOut').textContent = `${S.muG.toFixed(2)} · bremst mit ${(S.muG * G).toFixed(2)} m/s²`;
+
+    const r = onDisc() ? len(S.dp) : S.r0, need = w * w * r, lim = S.muH * G, ok = need <= lim;
+    $('#meterFill').style.width = `${Math.min(1, need / (2 * lim)) * 100}%`;
+    const mo = $('#meterOut');
+    mo.textContent = ok ? 'Haftreibung reicht' : 'reicht nicht, Karton rutscht';
+    mo.dataset.ok = String(ok);
+    $('#meterText').innerHTML = `nötig ${mm('ω²r')} = ${need.toFixed(2)} m/s² · möglich ${mm('μ<sub>H</sub>g')} = ${lim.toFixed(2)} m/s² (schwarzer Strich)`;
+  }
+
+  const fmt = x => (Math.abs(x) < 0.005 ? 0 : x).toFixed(2);
+  function readouts() {
+    const ids = ['o-r-in', 'o-r-rot', 'o-v-in', 'o-v-rot', 'o-zp-in', 'o-zp-rot', 'o-zf-rot', 'o-c-rot', 'o-sum-in', 'o-sum-rot'];
+    if (S.phase === 'gone') { ids.forEach(id => { document.getElementById(id).textContent = '—'; }); return; }
+    const k = kinematics(), K = k.K, ar = len(K.a);
+    const sum = { x: k.aR.x + k.aZF.x + k.aC.x, y: k.aR.y + k.aZF.y + k.aC.y };
+    const vals = [len(K.p), len(k.pr), len(K.v), len(k.vRel), ar, ar, len(k.aZF), len(k.aC), ar, len(sum)];
+    ids.forEach((id, i) => { document.getElementById(id).textContent = fmt(vals[i]); });
+  }
+
+  function setMode(m) {
+    S.mode = m;
+    $('#views').dataset.mode = m;
+    document.querySelectorAll('.frames button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.frame === m)));
+    try { history.replaceState(null, '', '#' + HASH[m]); } catch (e) { /* frame may forbid it */ }
+    $('#navOther').href = 'index.html#' + HASH[m];
+    updateUI();
+  }
+
+  document.querySelectorAll('.frames button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.frame)));
+  $('#release').addEventListener('click', release);
+  $('#reset').addEventListener('click', reset);
+  $('#play').addEventListener('click', () => { S.playing = !S.playing; updatePlay(); });
+
+  document.querySelectorAll('.chip input').forEach(inp => inp.addEventListener('change', () => {
+    S.show[inp.dataset.key] = inp.checked; dirty = true;
+  }));
+  $('#omega').addEventListener('input', e => { S.omega = +e.target.value; checkGrip(); updateUI(); });
+  $('#radius').addEventListener('input', e => {
+    S.r0 = +e.target.value;
+    if (onDisc()) {
+      const d = len(S.dp);
+      S.dp = { x: S.dp.x / d * S.r0, y: S.dp.y / d * S.r0 };
+      S.hist = []; sample(true);
+      checkGrip();
+    }
+    updateUI();
+  });
+  const muH = $('#muH'), muG = $('#muG');
+  muH.addEventListener('input', () => {
+    S.muH = +muH.value;
+    if (S.muG > S.muH) { S.muG = S.muH; muG.value = S.muG; }   // sliding friction never exceeds static friction
+    checkGrip(); updateUI();
+  });
+  muG.addEventListener('input', () => {
+    S.muG = +muG.value;
+    if (S.muH < S.muG) { S.muH = S.muG; muH.value = S.muH; }
+    updateUI();
+  });
+  document.querySelectorAll('input[name="tempo"]').forEach(r => r.addEventListener('change', () => { S.timeScale = +r.value; }));
+
+  /* ---------- QR code ---------- */
+
+  const qr = $('#qr'), qrUrl = $('#qrUrl');
+  let qrOpener = null;
+
+  function defaultUrl() {
+    let framed = true;
+    try { framed = window.top !== window.self; } catch (e) { /* cross-origin frame */ }
+    if (!framed && /^https?:$/.test(location.protocol)) return location.href.split('#')[0];
+    try { const v = localStorage.getItem(QR_KEY); if (v) return v; } catch (e) { /* storage blocked */ }
+    return SHARE_URL;
+  }
+
+  function renderQR() {
+    const box = $('#qrCode'), url = qrUrl.value.trim();
+    box.textContent = '';
+    $('#qrUrlText').textContent = url;
+    const msg = t => { const p = document.createElement('p'); p.textContent = t; box.append(p); };
+    if (!url) { msg('Gib unten die Adresse ein, unter der diese Seite erreichbar ist.'); return; }
+    if (typeof qrcode !== 'function') { msg('Der QR-Generator konnte nicht geladen werden. Prüfe die Internetverbindung und öffne das Fenster erneut.'); return; }
+    let q;
+    try { q = qrcode(0, 'M'); q.addData(url); q.make(); } catch (e) { msg('Diese Adresse ist zu lang für einen QR-Code.'); return; }
+    const n = q.getModuleCount(), quiet = 3, cells = n + 2 * quiet, px = Math.max(4, Math.floor(720 / cells));
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = cells * px;
+    cv.setAttribute('role', 'img');
+    cv.setAttribute('aria-label', 'QR-Code für ' + url);
+    const g = cv.getContext('2d');
+    const cs = getComputedStyle(document.documentElement);
+    g.fillStyle = cs.getPropertyValue('--qr-bg').trim(); g.fillRect(0, 0, cv.width, cv.height);
+    g.fillStyle = cs.getPropertyValue('--qr-ink').trim();
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+      if (q.isDark(r, c)) g.fillRect((c + quiet) * px, (r + quiet) * px, px, px);
+    }
+    box.append(cv);
+  }
+
+  function openQR() {
+    qrOpener = document.activeElement;
+    if (!qrUrl.value) qrUrl.value = defaultUrl();
+    qr.hidden = false;
+    renderQR();
+    if (typeof qrcode !== 'function') setTimeout(renderQR, 1200);
+    $('#qrClose').focus();
+  }
+  function closeQR() {
+    qr.hidden = true;
+    if (qrOpener) qrOpener.focus();
+  }
+  $('#qrBtn').addEventListener('click', openQR);
+  $('#qrClose').addEventListener('click', closeQR);
+  qr.addEventListener('click', e => { if (e.target === qr) closeQR(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !qr.hidden) closeQR(); });
+  qrUrl.addEventListener('input', () => {
+    renderQR();
+    try { localStorage.setItem(QR_KEY, qrUrl.value.trim()); } catch (e) { /* storage blocked */ }
+  });
+
+  /* ---------- start ---------- */
+
+  readColors();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+  new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { dirty = true; });
+
+  const fromHash = { mutter: 'in', kind: 'rot', beide: 'both' }[location.hash.slice(1)];
+  reset();
+  setMode(fromHash || 'in');
+
+  let last = performance.now(), lastUI = 0;
+  function loop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    if (S.playing) step(dt * S.timeScale);
+    if (dirty) {
+      for (const V of views) if (S.mode === 'both' || S.mode === V.frame) drawView(V);
+      dirty = false;
+    }
+    if (now - lastUI > 120) { readouts(); lastUI = now; }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+
+</html>

@@ -45,6 +45,7 @@
   --zp: #E0102A;
   --zf: #D916BE;
   --cor: #2335E6;
+  --sum: #2B2640;
 
   --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
@@ -58,7 +59,7 @@
     --floor: #17141F; --grid: #26222F; --disc: #6A5141; --discline: #846552; --figure: #A890FF;
     --ring: #54459A; --karton: #D9D9DE; --kartonedge: #8E8D97; --trace: #9993AC;
     --halo: rgba(18, 16, 25, 0.85); --shadow: rgba(0, 0, 0, 0.55); --mark: #D6D1E6;
-    --v: #FF9A3D; --zp: #FF5468; --zf: #FF62E8; --cor: #8592FF;
+    --v: #FF9A3D; --zp: #FF5468; --zf: #FF62E8; --cor: #8592FF; --sum: #EDEAF5;
     color-scheme: dark;
   }
 }
@@ -69,7 +70,7 @@
   --floor: #17141F; --grid: #26222F; --disc: #6A5141; --discline: #846552; --figure: #A890FF;
   --ring: #54459A; --karton: #D9D9DE; --kartonedge: #8E8D97; --trace: #9993AC;
   --halo: rgba(18, 16, 25, 0.85); --shadow: rgba(0, 0, 0, 0.55); --mark: #D6D1E6;
-  --v: #FF9A3D; --zp: #FF5468; --zf: #FF62E8; --cor: #8592FF;
+  --v: #FF9A3D; --zp: #FF5468; --zf: #FF62E8; --cor: #8592FF; --sum: #EDEAF5;
   color-scheme: dark;
 }
 
@@ -197,7 +198,7 @@ h1 {
   content: "\2192"; position: absolute; left: 55%; top: -0.62em; transform: translateX(-50%);
   font-size: 0.72em; font-style: normal; line-height: 1;
 }
-.t-v { color: var(--v); } .t-zp { color: var(--zp); } .t-zf { color: var(--zf); } .t-cor { color: var(--cor); }
+.t-v { color: var(--v); } .t-zp { color: var(--zp); } .t-zf { color: var(--zf); } .t-cor { color: var(--cor); } .t-sum { color: var(--sum); }
 
 /* toggles */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -283,6 +284,22 @@ details p { margin: 4px 0 0; line-height: 1.75; }
   .btn { padding: 0 12px; }
   .eq { font-size: 17px; }
 }
+
+/* page switch: page 1 without friction, page 2 with friction */
+.pages { display: flex; flex-wrap: wrap; gap: 6px; }
+.pages a {
+  display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 14px 0 6px;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--surface);
+  color: var(--ink); text-decoration: none; font-size: 14px; font-weight: 700;
+}
+.pages .n {
+  display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent); font-family: var(--font-display); font-size: 14px;
+}
+.pages a[aria-current="page"] { background: var(--accent); border-color: transparent; color: var(--accent-ink); }
+.pages a[aria-current="page"] .n { background: var(--accent-ink); color: var(--accent); }
+.pages a:not([aria-current="page"]):hover { border-color: var(--accent); }
+.pages a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 </style>
 
 <div class="app">
@@ -297,6 +314,11 @@ details p { margin: 4px 0 0; line-height: 1.75; }
       QR-Code
     </button>
   </header>
+
+  <nav class="pages" aria-label="Seiten">
+    <a href="index.html" aria-current="page"><span class="n">1</span>Ohne Reibung</a>
+    <a href="reibung.html" id="navOther"><span class="n">2</span>Mit Reibung</a>
+  </nav>
 
   <main class="layout">
     <section class="stage" aria-label="Simulation">
@@ -355,11 +377,14 @@ details p { margin: 4px 0 0; line-height: 1.75; }
           <label class="chip t-cor"><input type="checkbox" id="show-cor" data-key="cor" checked>
             <svg class="sw" viewBox="0 0 26 12" aria-hidden="true"><path d="M1 6h17" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M16 1.5 25 6l-9 4.5z" fill="currentColor"/></svg>
             <span class="m"><span class="vec">a</span><sub>C</sub></span><span class="lbl">Coriolis</span></label>
+          <label class="chip t-sum"><input type="checkbox" id="show-sum" data-key="sum" checked>
+            <svg class="sw" viewBox="0 0 26 12" aria-hidden="true"><path d="M1 3.6H16V.6L25 6l-9 5.4V8.4H1z" fill="currentColor" fill-opacity=".3" stroke="currentColor" stroke-opacity=".6" stroke-linejoin="round"/></svg>
+            <span class="m"><span class="vec">a</span>′</span><span class="lbl">Summe</span></label>
           <label class="chip"><input type="checkbox" id="show-trace" data-key="trace" checked>
             <svg class="sw" viewBox="0 0 26 12" aria-hidden="true" style="color: var(--trace)"><path d="M2 6h22" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity=".6"/><circle cx="5" cy="6" r="2.6" fill="currentColor"/><circle cx="13" cy="6" r="2.6" fill="currentColor"/><circle cx="21" cy="6" r="2.6" fill="currentColor"/></svg>
             <span class="lbl">Bahnspur &amp; Stroboskop</span></label>
         </div>
-        <p class="note"><span class="m t-zp"><span class="vec">a</span><sub>ZP</sub></span> kommt von einer echten Kraft, der Haftreibung. <span class="m t-zf"><span class="vec">a</span><sub>ZF</sub></span> und <span class="m t-cor"><span class="vec">a</span><sub>C</sub></span> sind Scheinkräfte pro Masse. Es gibt sie nur in der Sicht des Kindes.<span id="inHint"> In der Sicht der Mutter erscheinen sie deshalb nicht.</span></p>
+        <p class="note"><span class="m t-zp"><span class="vec">a</span><sub>ZP</sub></span> kommt von einer echten Kraft, der Haftreibung. <span class="m t-zf"><span class="vec">a</span><sub>ZF</sub></span> und <span class="m t-cor"><span class="vec">a</span><sub>C</sub></span> sind Scheinkräfte pro Masse. Es gibt sie nur in der Sicht des Kindes.<span id="inHint"> In der Sicht der Mutter erscheinen sie deshalb nicht.</span> Der breite, blasse Pfeil <span class="m t-sum"><span class="vec">a</span>′</span> ist die Summe aller Beschleunigungen in der Sicht des Kindes. Er zeigt, wie sich <span class="m t-v"><span class="vec">v</span><sub>rel</sub></span> ändert.</p>
       </section>
 
       <section class="group" aria-labelledby="h-set">
@@ -393,7 +418,7 @@ details p { margin: 4px 0 0; line-height: 1.75; }
               <tr><th scope="row">Zentripetal <span class="m t-zp"><span class="vec">a</span><sub>ZP</sub></span><span class="u">m/s²</span></th><td class="c-in" id="o-zp-in"></td><td class="c-rot" id="o-zp-rot"></td></tr>
               <tr><th scope="row">Zentrifugal <span class="m t-zf"><span class="vec">a</span><sub>ZF</sub></span><span class="u">m/s²</span></th><td class="c-in" title="Im Inertialsystem gibt es keine Scheinkräfte">—</td><td class="c-rot" id="o-zf-rot"></td></tr>
               <tr><th scope="row">Coriolis <span class="m t-cor"><span class="vec">a</span><sub>C</sub></span><span class="u">m/s²</span></th><td class="c-in" title="Im Inertialsystem gibt es keine Scheinkräfte">—</td><td class="c-rot" id="o-c-rot"></td></tr>
-              <tr><th scope="row">Summe <span class="m">|<span class="vec">a</span>|</span><span class="u">m/s²</span></th><td class="c-in" id="o-sum-in"></td><td class="c-rot" id="o-sum-rot"></td></tr>
+              <tr><th scope="row">Summe <span class="m t-sum"><span class="vec">a</span></span> / <span class="m t-sum"><span class="vec">a</span>′</span><span class="u">m/s²</span></th><td class="c-in" id="o-sum-in"></td><td class="c-rot" id="o-sum-rot"></td></tr>
             </tbody>
           </table>
         </div>
@@ -403,7 +428,7 @@ details p { margin: 4px 0 0; line-height: 1.75; }
       <section class="group" aria-labelledby="h-eq">
         <h3 id="h-eq">Bewegungsgleichung im rotierenden System</h3>
         <div class="eq" aria-label="m mal a Strich gleich F plus m omega Quadrat r Strich minus 2 m mal omega kreuz v rel">
-          <span class="term"><span><span class="m">m</span> <span class="m"><span class="vec">a</span>′</span></span><small>beobachtet</small></span>
+          <span class="term t-sum"><span><span class="m">m</span> <span class="m"><span class="vec">a</span>′</span></span><small>beobachtet</small></span>
           <span class="op">=</span>
           <span class="term t-zp"><span class="m"><span class="vec">F</span></span><small>echte Kraft<br>(Haftreibung)</small></span>
           <span class="op">+</span>
@@ -426,6 +451,10 @@ details p { margin: 4px 0 0; line-height: 1.75; }
             <p>Im Moment des Lösens ruht der Karton relativ zur Scheibe: <span class="m"><span class="vec">v</span><sub>rel</sub> = 0</span>, also ist auch <span class="m"><span class="vec">a</span><sub>C</sub> = −2(<span class="vec">ω</span> × <span class="vec">v</span><sub>rel</sub>) = 0</span>. Zuerst wirkt nur der Zentrifugalterm. Erst wenn der Karton nach aussen gleitet, wächst der Coriolisterm.</p>
           </details>
           <details>
+            <summary>Nach dem Lösen wirkt keine Kraft. Warum wird <span class="m"><span class="vec">v</span><sub>rel</sub></span> trotzdem immer grösser?</summary>
+            <p>Für die Mutter bleibt <span class="m"><span class="vec">v</span><sub>t</sub></span> konstant. Das Kind misst aber relativ zur Scheibe, und deren Punkte laufen umso schneller, je weiter aussen sie liegen (<span class="m">ωr</span>). Es gilt <span class="m"><span class="vec">v</span><sub>rel</sub> = <span class="vec">v</span><sub>t</sub> − <span class="vec">ω</span> × <span class="vec">r</span></span>, und der Unterschied wächst mit <span class="m">r</span>. Im System des Kindes beschleunigt der Zentrifugalterm den Karton. Der Coriolisterm steht senkrecht zu <span class="m"><span class="vec">v</span><sub>rel</sub></span> und ändert nur die Richtung. Genau gilt <span class="m">v<sub>rel</sub> = ω√(r² − r<sub>0</sub>²)</span>, mit dem Startabstand <span class="m">r<sub>0</sub></span>. Der breite Pfeil <span class="m t-sum"><span class="vec">a</span>′</span> ist die Summe der beiden Terme. Ihr Anteil längs <span class="m"><span class="vec">v</span><sub>rel</sub></span> macht <span class="m"><span class="vec">v</span><sub>rel</sub></span> grösser, ihr Anteil quer dazu dreht ihn.</p>
+          </details>
+          <details>
             <summary>Kehre die Drehrichtung um (ω &lt; 0). Wohin lenkt der Coriolisterm jetzt ab?</summary>
             <p>Der Coriolisterm wechselt das Vorzeichen. Dreht die Scheibe gegen den Uhrzeigersinn (wie die Erde, von Norden gesehen), lenkt er in Bewegungsrichtung nach rechts ab, wie beim Zug zwischen Zürich und Schaffhausen. Im Uhrzeigersinn lenkt er nach links ab.</p>
           </details>
@@ -434,7 +463,7 @@ details p { margin: 4px 0 0; line-height: 1.75; }
             <p><span class="m">a<sub>ZP</sub> = a<sub>ZF</sub> = ω²r</span> werden viermal so gross. Die Spirale hat aber genau dieselbe Form: Der Karton fliegt doppelt so schnell weg, und die Scheibe dreht sich doppelt so schnell. Sie wird nur doppelt so schnell durchlaufen.</p>
           </details>
         </div>
-        <p class="foot">Annahmen: Die Scheibe dreht mit konstantem ω. Nach dem Lösen gleitet der Karton reibungsfrei weiter, auch über den Scheibenrand hinaus. Die Pfeile zeigen Beschleunigungen (Kraft pro Masse, <span class="m">F = m·a</span>). Sehr lange Pfeile werden gestaucht dargestellt.</p>
+        <p class="foot">Annahmen: Die Scheibe dreht mit konstantem ω. Nach dem Lösen gleitet der Karton reibungsfrei weiter, auch über den Scheibenrand hinaus. Die Pfeile zeigen Beschleunigungen (Kraft pro Masse, <span class="m">F = m·a</span>). Pfeile derselben Art haben in beiden Bildern denselben Massstab, so kann man sie vergleichen und addieren. Würde ein Pfeil zu lang, wird der Massstab für alle zusammen kleiner.</p>
       </section>
     </aside>
   </main>
@@ -468,6 +497,7 @@ details p { margin: 4px 0 0; line-height: 1.75; }
   const GONE_R = 2.95;          // beyond this the Karton is outside every view
   const KA = 0.3;               // arrow length in m per m/s²
   const KV = 0.5;               // arrow length in m per m/s
+  const LMAX = 1.0;             // the arrow scale shrinks so that no arrow gets longer than this, m
   const MATH = '"STIX Two Text", "Cambria Math", "Times New Roman", serif';
   const HASH = { in: 'mutter', rot: 'kind', both: 'beide' };
 
@@ -480,7 +510,7 @@ details p { margin: 4px 0 0; line-height: 1.75; }
     rel: null,                  // state at the moment of release
     hist: [], strobes: [], lastSample: -Infinity, nextStrobe: 0,
     mode: 'in',
-    show: { v: true, zp: true, zf: true, cor: true, trace: true },
+    show: { v: true, zp: true, zf: true, cor: true, sum: true, trace: true },
   };
   let dirty = true;
 
@@ -578,7 +608,7 @@ details p { margin: 4px 0 0; line-height: 1.75; }
 
   const C = {};
   const TOKENS = ['floor', 'grid', 'disc', 'discline', 'figure', 'ring', 'karton', 'kartonedge',
-    'trace', 'halo', 'shadow', 'mark', 'v', 'zp', 'zf', 'cor'];
+    'trace', 'halo', 'shadow', 'mark', 'v', 'zp', 'zf', 'cor', 'sum'];
   function readColors() {
     const cs = getComputedStyle(document.documentElement);
     for (const k of TOKENS) C[k] = cs.getPropertyValue('--' + k).trim();
@@ -613,11 +643,40 @@ details p { margin: 4px 0 0; line-height: 1.75; }
     return true;
   }
 
+  // The sum a′ as a broad, pale arrow underneath, so the arrows it is made of stay readable on top
+  function broadArrow(ctx, x0, y0, dx, dy, col, lw) {
+    const L = Math.hypot(dx, dy);
+    if (L < 3) return false;
+    const ux = dx / L, uy = dy / L, b = lw * 1.6, hl = Math.min(L * 0.6, lw * 6);
+    const tx = x0 + dx, ty = y0 + dy, bx = tx - ux * hl, by = ty - uy * hl;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x0 - uy * b, y0 + ux * b);
+    ctx.lineTo(bx - uy * b, by + ux * b);
+    ctx.lineTo(bx - uy * b * 2.1, by + ux * b * 2.1);
+    ctx.lineTo(tx, ty);
+    ctx.lineTo(bx + uy * b * 2.1, by - ux * b * 2.1);
+    ctx.lineTo(bx + uy * b, by - ux * b);
+    ctx.lineTo(x0 + uy * b, y0 - ux * b);
+    ctx.closePath();
+    ctx.fillStyle = col; ctx.globalAlpha = 0.28; ctx.fill();
+    ctx.strokeStyle = col; ctx.globalAlpha = 0.6; ctx.lineWidth = 1; ctx.lineJoin = 'round'; ctx.stroke();
+    ctx.restore();
+    return true;
+  }
+
+  // Pixels per unit for one kind of arrow. Linear and shared by every arrow of that kind in both views,
+  // so arrows can be compared and added; it shrinks for all of them together when the longest would pass LMAX
+  function arrowScale(k, vecs, s) {
+    const m = Math.max(...vecs.map(len));
+    return (m * k > 1e-9 ? LMAX * Math.tanh(m * k / LMAX) / m : k) * s;
+  }
+
   // Italic vector symbol with an arrow above and a subscript, e.g. a⃗_ZF
   function vlabel(ctx, x, y, sym, sub, col, fs) {
     ctx.save();
     const f1 = `italic ${fs}px ${MATH}`, f2 = `italic ${Math.round(fs * 0.68)}px ${MATH}`;
-    ctx.font = f1; const w1 = ctx.measureText(sym).width;
+    ctx.font = f1; const w1 = ctx.measureText(sym).width, wa = ctx.measureText(sym[0]).width;
     ctx.font = f2; const w2 = sub ? ctx.measureText(sub).width : 0;
     const x0 = x - (w1 + w2 + 1) / 2, base = y + fs * 0.3;
     ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -628,7 +687,7 @@ details p { margin: 4px 0 0; line-height: 1.75; }
       ctx.strokeText(sub, x0 + w1 + 1, base + fs * 0.2);
       ctx.fillText(sub, x0 + w1 + 1, base + fs * 0.2);
     }
-    const ay = base - fs * 0.8, ax0 = x0 + fs * 0.06, ax1 = x0 + Math.max(w1, fs * 0.45) + fs * 0.1, hs = fs * 0.16;
+    const ay = base - fs * 0.8, ax0 = x0 + fs * 0.06, ax1 = x0 + Math.max(wa, fs * 0.45) + fs * 0.1, hs = fs * 0.16;
     for (const [c, lw] of [[C.halo, 3.5], [col, Math.max(1.2, fs * 0.075)]]) {
       ctx.strokeStyle = c; ctx.lineWidth = lw;
       ctx.beginPath();
@@ -821,25 +880,28 @@ details p { margin: 4px 0 0; line-height: 1.75; }
 
     // vectors
     if (S.phase !== 'gone') {
+      const aSum = { x: kin.aZP.x + kin.aZF.x + kin.aC.x, y: kin.aZP.y + kin.aZF.y + kin.aC.y };   // a′, what the child observes
+      const ka = arrowScale(KA, [kin.aZP, kin.aZF, kin.aC, aSum], s), kv = arrowScale(KV, [K.v, kin.vRel], s);
       const list = [];
       if (rotating) {
-        if (S.show.v) list.push([kin.vRel, KV, C.v, 'v', 'rel']);
-        if (S.show.zp && S.phase === 'stuck') list.push([kin.aZP, KA, C.zp, 'a', 'ZP']);
-        if (S.show.zf) list.push([kin.aZF, KA, C.zf, 'a', 'ZF']);
-        if (S.show.cor) list.push([kin.aC, KA, C.cor, 'a', 'C']);
+        if (S.show.sum) list.push([aSum, ka, C.sum, 'a′', '', true]);
+        if (S.show.v) list.push([kin.vRel, kv, C.v, 'v', 'rel']);
+        if (S.show.zp && S.phase === 'stuck') list.push([kin.aZP, ka, C.zp, 'a', 'ZP']);
+        if (S.show.zf) list.push([kin.aZF, ka, C.zf, 'a', 'ZF']);
+        if (S.show.cor) list.push([kin.aC, ka, C.cor, 'a', 'C']);
       } else {
-        if (S.show.v) list.push([K.v, KV, C.v, 'v', 't']);
-        if (S.show.zp && S.phase === 'stuck') list.push([K.a, KA, C.zp, 'a', 'ZP']);
+        if (S.show.v) list.push([K.v, kv, C.v, 'v', 't']);
+        if (S.show.zp && S.phase === 'stuck') list.push([K.a, ka, C.zp, 'a', 'ZP']);
       }
-      const ox = X(kp), oy = Y(kp), Lmax = 1.0 * s;
+      const ox = X(kp), oy = Y(kp);
       const lw = Math.max(2.5, 0.03 * s), fs = Math.round(clamp(0.14 * s, 13, 22));
       const labels = [];
-      for (const [vec, k, col, sym, sub] of list) {
+      for (const [vec, k, col, sym, sub, broad] of list) {
         const m = len(vec);
         if (m < 1e-9) continue;
-        const L = Lmax * Math.tanh(m * k * s / Lmax);
+        const L = m * k;
         const ux = vec.x / m, uy = -vec.y / m;
-        if (arrow(ctx, ox, oy, ux * L, uy * L, col, lw)) {
+        if ((broad ? broadArrow : arrow)(ctx, ox, oy, ux * L, uy * L, col, lw)) {
           // label beside the tip, on the right of the arrow (above it for horizontal arrows), as on the slides
           const flip = Math.abs(uy) > 0.2 ? uy > 0 : ux > 0;
           const px = flip ? uy : -uy, py = flip ? -ux : ux;
@@ -963,6 +1025,7 @@ details p { margin: 4px 0 0; line-height: 1.75; }
     $('#views').dataset.mode = m;
     document.querySelectorAll('.frames button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.frame === m)));
     try { history.replaceState(null, '', '#' + HASH[m]); } catch (e) { /* frame may forbid it */ }
+    $('#navOther').href = 'reibung.html#' + HASH[m];
     updateUI();
   }
 
